@@ -1,5 +1,6 @@
 #include "raylib.h"
 
+// Constantes de menu do jogo
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 #define MENU_TITLE "Space Invaders"
@@ -9,11 +10,21 @@
 #define MENU_OPTION_EXIT "Sair"
 #define FONT_SIZE 40
 
+// Constantes do Player
+#define PLAYER_SIZE_X 80
+#define PLAYER_SIZE_Y 20
+
 int selectedOption = 0; // Opção selecionada no menu
 
 // Protótipo da função
 //void DrawMenu(Font font, Music sound);
 //void DrawCredits(Font font);
+
+struct Player{
+    Vector2 position;
+    Vector2 size;
+    int life;
+};
 
 int main() {
     // Inicialização da janela
@@ -26,43 +37,37 @@ int main() {
     InitAudioDevice();
     Music musica = LoadMusicStream("SomGame.wav");
     Music musica1 = LoadMusicStream("SomClique.wav");
-
-    bool showCredits = false; // Variável para controlar se os créditos estão sendo exibidos
-    bool showCmd = false;
-    bool showGame = false;
+    
+    struct Player player;
+    player.size.x = PLAYER_SIZE_X;
+    player.size.y = PLAYER_SIZE_Y;
+    player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
+    
+    
+    // Variaveis de jogo
+    /* Usadas para definir quando esta em game e quando está no menu */
+    bool inGame = true;
+    bool inMenu = false;
+    
     // Loop principal do jogo
     while (!WindowShouldClose()) {
-        if(!showCmd){
-            if (!showCredits) {
-                playMusic(musica, musica1);
-                UpDownMenuLogic();
-                ChangePagetoSelectedOption(selectedOption);
-                    
-            } else {
-                // Lógica dos créditos 
-                while(!IsKeyPressed(KEY_ENTER)) {
-                    // Voltar para o menu principal
-                    UpdateMusicStream(musica);
-                    PlayMusicStream(musica);
-                    showCredits = false;
-                    DrawCredits(font);
-                    DrawText("Pressione Enter para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione Enter para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
-                    // Pausa a música enquanto retorna ao menu principal  
-                }
-            }
-        }else{
-            //Lógica de controles
-            while(!IsKeyPressed(KEY_ENTER)) {
-                // Voltar para o menu principal
-                UpdateMusicStream(musica);
-                PlayMusicStream(musica);
-                showCmd = false;
-                DrawCmd(font);
-                DrawText("Pressione Enter para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione Enter para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
-            }
-        }        
-        // Desenha o menu
-        DrawMenu(font, musica);
+        BeginDrawing();
+        ClearBackground(RAYWHITE);
+        playMusic(musica, musica1);    
+        PlayMusicStream(musica);
+        
+        if(inMenu == false && inGame == true) {
+            DrawGame(player);
+        }
+        
+        if(inMenu == true && inGame == false) {
+            
+            UpDownMenuLogic();
+            ChangePagetoSelectedOption(selectedOption, musica1);
+            // Desenha o menu
+            DrawMenu(font, musica);
+        }
+        EndDrawing();
     }
 
     // Liberação de recursos
@@ -79,10 +84,7 @@ void playMusic(Music musica, Music musica1) {
     // TODO: Alterar função, função provisória
     UpdateMusicStream(musica);
     UpdateMusicStream(musica1);
-    PlayMusicStream(musica);
-    StopMusicStream(musica1);
 }
-
 //-------UpDownMenuLogic
 void UpDownMenuLogic() {
     //Essa função é utilizada para logica dos botoes no menu
@@ -111,23 +113,29 @@ void UpDownMenuLogic() {
 
 }
 
-//---------------------------------------------
-void ChangePagetoSelectedOption(int opcaoSelecionada) {
-    
+//-------ChangePagetoSelectedOption
+void ChangePagetoSelectedOption(int opcaoSelecionada, Music musica1) {
+    // Funçao com objetivo de selecionar uma opção
+    // TODO: Em construção - aceitando mudanças
+    float posicao = GetMusicTimePlayed(musica1);
+    bool showCr = false;
+    if(posicao >= 1.120000) {
+        StopMusicStream(musica1);
+    }
     if(IsKeyPressed(KEY_ENTER)) {
+        PlayMusicStream(musica1);
         switch(opcaoSelecionada) {
             case 0:
                 //Jogar
-                DrawText("Jogar", 50,50, 20, BLACK);
                 break;
             case 1:
-                DrawText("Controles", 50,50, 20, BLACK);
+                //Controles
                 break;
             case 2:
-                DrawText("Créditos", 50,50, 20, BLACK);
+                //Créditos
                 break;
             case 3:
-                DrawText("SAIR", 50,50, 20, BLACK);
+                //Sair
                 break;
         }
     }
@@ -135,10 +143,8 @@ void ChangePagetoSelectedOption(int opcaoSelecionada) {
 }
 
 //-------DrawMenu
-void DrawMenu(Font font, Music sound) {
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
-
+void DrawMenu() {
+    
     // Desenhe o título
     DrawText(MENU_TITLE, SCREEN_WIDTH / 2 - MeasureText(MENU_TITLE, FONT_SIZE) / 2, 80, FONT_SIZE, BLACK);
 
@@ -152,16 +158,14 @@ void DrawMenu(Font font, Music sound) {
                      SCREEN_WIDTH - SCREEN_WIDTH, 200 + i * 80, FONT_SIZE, (i == selectedOption) ? MAROON : BLACK);
         }
     }
-
-    EndDrawing();
+    
 }
 
 //-------DrawCredits
-void DrawCredits(Font font) {
+void DrawCredits() {
     // Esta função desenha a tela de créditos
     // Você pode personalizar essa função para exibir os nomes dos desenvolvedores, agradecimentos, etc.
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
+    
     
 
     // Exemplo: Desenha os nomes dos desenvolvedores
@@ -170,18 +174,18 @@ void DrawCredits(Font font) {
     DrawText("Seu Nome", SCREEN_WIDTH / 2 - MeasureText("Seu Nome", FONT_SIZE) / 2, 200, FONT_SIZE, BLACK);
 
     // Adicione mais linhas para outros desenvolvedores ou agradecimentos
-    EndDrawing();
+    
 }
 //-------DrawCmd
 void DrawCmd(Font font){
-    BeginDrawing();
-    ClearBackground(RAYWHITE);
+    // Desenho de texto informando os controlers
     DrawText("Controles:", 10, 10, 20, BLACK);
     DrawText("- Setas do Teclado para mover", 10, 40, 20, BLACK);
     DrawText("- Barra de Espaço para ação", 10, 70, 20, BLACK);
-    EndDrawing();
 } 
 //-------------------------
-void DrawGame() {
-    
+void DrawGame(struct Player player) {
+    //Desenho do jogo
+    ClearBackground(BLACK);
+    DrawRectangle(player.position.x, SCREEN_HEIGHT - (player.size.y * 2), player.size.x, player.size.y, RED);
 }
