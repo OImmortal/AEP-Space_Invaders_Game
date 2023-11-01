@@ -27,6 +27,7 @@ int selectedOption = 0; // Opção selecionada no menu
 struct Player{
     Vector2 position;
     Vector2 size;
+    int score;
     int life;
 };
 
@@ -70,7 +71,7 @@ int main() {
     boss.size.x = 80;
     boss.size.y = 20;
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
-    boss.position.y = 20;
+    boss.position.y = 50;
     
     struct BulletPlayer bullet;
     bullet.active = false;
@@ -101,7 +102,7 @@ int main() {
             //Aqui sera executado todo o código fora do menu
             
             //Movimentação do boss
-            if(bossPosition == SCREEN_WIDTH - boss.size.x) andar = false;
+            if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andar = false;
             if(bossPosition == 0) andar = true;   
             if(andar == false) {
                 bossPosition-=3;
@@ -118,8 +119,12 @@ int main() {
             if(IsKeyDown(KEY_LEFT) && player.position.x > 0) {
                 player.position.x -= 5;
             }   
-
-
+            
+            if(IsKeyPressed(KEY_SPACE)) {
+                player.score += 1;
+            }
+            
+            DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 110, 20, 20, RED);
             
             
             //Game render
@@ -245,6 +250,7 @@ void DrawCmd(Font font){
     DrawText("- Setas do Teclado para mover", 10, 40, 20, BLACK);
     DrawText("- Barra de Espaço para ação", 10, 70, 20, BLACK);
 } 
+
 //-------------------------
 void DrawGame(struct Player player, struct EnemyBoss boss) {
     //Desenho do jogo
