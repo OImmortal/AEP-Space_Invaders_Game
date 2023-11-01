@@ -151,6 +151,7 @@ int main() {
                         break;
                     case 3:
                         //Sair
+                        CloseWindow();
                         break;
                 }
             }
