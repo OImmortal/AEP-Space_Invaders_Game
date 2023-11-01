@@ -1,4 +1,8 @@
 #include "raylib.h"
+#include <time.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 // Constantes de menu do jogo
 #define SCREEN_WIDTH 800
@@ -26,7 +30,24 @@ struct Player{
     int life;
 };
 
+struct EnemyBoss {
+    Vector2 position;
+    Vector2 size;
+    int life;
+};
+
+struct BulletPlayer{
+    Vector2 position;
+    Rectangle size;
+    bool active;
+    int speed;
+};
+
 int main() {
+    srand(time(NULL));
+    
+    int teste = rand() % 3;
+    
     // Inicialização da janela
     InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Meu Jogo");
 
@@ -38,16 +59,30 @@ int main() {
     Music musica = LoadMusicStream("SomGame.wav");
     Music musica1 = LoadMusicStream("SomClique.wav");
     
+    // Struct do player
     struct Player player;
     player.size.x = PLAYER_SIZE_X;
     player.size.y = PLAYER_SIZE_Y;
     player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
     
+    //Struct do Boss
+    struct EnemyBoss boss;
+    boss.size.x = 80;
+    boss.size.y = 20;
+    boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
+    boss.position.y = 20;
+    
+    struct BulletPlayer bullet;
+    bullet.active = false;
     
     // Variaveis de jogo
     /* Usadas para definir quando esta em game e quando está no menu */
-    bool inGame = true;
-    bool inMenu = false;
+    bool inGame = false;
+    bool inMenu = true;
+    
+    //Posição do boss
+    bool andar = true;
+    int bossPosition = boss.position.x;
     
     // Loop principal do jogo
     while (!WindowShouldClose()) {
@@ -56,17 +91,73 @@ int main() {
         playMusic(musica, musica1);    
         PlayMusicStream(musica);
         
+        //Voltar para o menu
+        if(IsKeyPressed(KEY_TAB)) {
+            inMenu = true;
+            inGame = false;
+        }
+        
         if(inMenu == false && inGame == true) {
-            DrawGame(player);
+            //Aqui sera executado todo o código fora do menu
+            
+            //Movimentação do boss
+            if(bossPosition == SCREEN_WIDTH - boss.size.x) andar = false;
+            if(bossPosition == 0) andar = true;   
+            if(andar == false) {
+                bossPosition-=3;
+            } else if(andar == true) {
+                bossPosition+=3;
+            }
+            boss.position.x = bossPosition;
+            
+            //Movimentação do player
+            if(IsKeyDown(KEY_RIGHT) && player.position.x < (SCREEN_WIDTH - player.size.x)) {
+                player.position.x += 5;
+            }
+            
+            if(IsKeyDown(KEY_LEFT) && player.position.x > 0) {
+                player.position.x -= 5;
+            }   
+
+
+            
+            
+            //Game render
+            DrawGame(player, boss);
         }
         
         if(inMenu == true && inGame == false) {
             
             UpDownMenuLogic();
-            ChangePagetoSelectedOption(selectedOption, musica1);
-            // Desenha o menu
+            // Selecionar opção do menu
+            if(IsKeyPressed(KEY_ENTER)) {
+                PlayMusicStream(musica1);
+                switch(selectedOption) {
+                    case 0:
+                        //Jogar
+                        inMenu = false;
+                        inGame = true;
+                        break;
+                    case 1:
+                        //Controles
+                        break;
+                    case 2:
+                        //Créditos
+                        break;
+                    case 3:
+                        //Sair
+                        break;
+                }
+            }
             DrawMenu(font, musica);
         }
+        
+        // Para musica do clique
+        float musicPosition = GetMusicTimePlayed(musica1);
+        if(musicPosition >= 1.120000) {
+            StopMusicStream(musica1);
+        }
+        
         EndDrawing();
     }
 
@@ -79,6 +170,7 @@ int main() {
 
     return 0;
 }
+
 //-------playMusic
 void playMusic(Music musica, Music musica1) {
     // TODO: Alterar função, função provisória
@@ -113,35 +205,6 @@ void UpDownMenuLogic() {
 
 }
 
-//-------ChangePagetoSelectedOption
-void ChangePagetoSelectedOption(int opcaoSelecionada, Music musica1) {
-    // Funçao com objetivo de selecionar uma opção
-    // TODO: Em construção - aceitando mudanças
-    float posicao = GetMusicTimePlayed(musica1);
-    bool showCr = false;
-    if(posicao >= 1.120000) {
-        StopMusicStream(musica1);
-    }
-    if(IsKeyPressed(KEY_ENTER)) {
-        PlayMusicStream(musica1);
-        switch(opcaoSelecionada) {
-            case 0:
-                //Jogar
-                break;
-            case 1:
-                //Controles
-                break;
-            case 2:
-                //Créditos
-                break;
-            case 3:
-                //Sair
-                break;
-        }
-    }
-    
-}
-
 //-------DrawMenu
 void DrawMenu() {
     
@@ -167,7 +230,6 @@ void DrawCredits() {
     // Você pode personalizar essa função para exibir os nomes dos desenvolvedores, agradecimentos, etc.
     
     
-
     // Exemplo: Desenha os nomes dos desenvolvedores
     DrawText("Créditos", SCREEN_WIDTH / 2 - MeasureText("Créditos", FONT_SIZE) / 2, 80, FONT_SIZE, BLACK);
     DrawText("Desenvolvido por:", SCREEN_WIDTH / 2 - MeasureText("Desenvolvido por:", FONT_SIZE) / 2, 150, FONT_SIZE, BLACK);
@@ -184,8 +246,10 @@ void DrawCmd(Font font){
     DrawText("- Barra de Espaço para ação", 10, 70, 20, BLACK);
 } 
 //-------------------------
-void DrawGame(struct Player player) {
+void DrawGame(struct Player player, struct EnemyBoss boss) {
     //Desenho do jogo
     ClearBackground(BLACK);
+    // Desenhar o player
     DrawRectangle(player.position.x, SCREEN_HEIGHT - (player.size.y * 2), player.size.x, player.size.y, RED);
+    DrawRectangle(boss.position.x, boss.position.y, boss.size.x, boss.size.y, WHITE);
 }
