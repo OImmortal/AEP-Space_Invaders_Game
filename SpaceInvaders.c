@@ -15,7 +15,7 @@
 #define FONT_SIZE 40
 
 // Constantes do Player
-#define PLAYER_SIZE_X 80
+#define PLAYER_SIZE_X 100
 #define PLAYER_SIZE_Y 20
 
 int selectedOption = 0; // Opção selecionada no menu
@@ -37,12 +37,6 @@ struct EnemyBoss {
     int life;
 };
 
-struct BulletPlayer{
-    Vector2 position;
-    Rectangle size;
-    bool active;
-    int speed;
-};
 
 int main() {
     srand(time(NULL));
@@ -65,6 +59,13 @@ int main() {
     player.size.x = PLAYER_SIZE_X;
     player.size.y = PLAYER_SIZE_Y;
     player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
+    player.position.y = SCREEN_HEIGHT - (player.size.y * 2);
+    player.score = 0;
+    
+    //Código da bullet
+    bool bulletActive = false;
+    int balaY = player.position.y - 20;
+    int balaX;
     
     //Struct do Boss
     struct EnemyBoss boss;
@@ -73,8 +74,7 @@ int main() {
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
     boss.position.y = 50;
     
-    struct BulletPlayer bullet;
-    bullet.active = false;
+    
     
     // Variaveis de jogo
     /* Usadas para definir quando esta em game e quando está no menu */
@@ -118,13 +118,25 @@ int main() {
             
             if(IsKeyDown(KEY_LEFT) && player.position.x > 0) {
                 player.position.x -= 5;
-            }   
-            
-            if(IsKeyPressed(KEY_SPACE)) {
-                player.score += 1;
+            } 
+
+            if(IsKeyPressed(KEY_SPACE)){
+                bulletActive = true;
             }
             
-            DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 110, 20, 20, RED);
+            if(bulletActive == true) {
+                
+                if(balaY <= 0) {
+                    bulletActive = false;
+                    balaY = player.position.y;
+                } else { 
+                    balaY -= 10;
+                }
+                DrawRectangle(player.position.x + (player.size.x / 2.2), balaY, 10 ,10, RED);
+            }
+            
+            
+            DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 130, 20, 20, RED);
             
             
             //Game render
@@ -257,6 +269,6 @@ void DrawGame(struct Player player, struct EnemyBoss boss) {
     //Desenho do jogo
     ClearBackground(BLACK);
     // Desenhar o player
-    DrawRectangle(player.position.x, SCREEN_HEIGHT - (player.size.y * 2), player.size.x, player.size.y, RED);
+    DrawRectangle(player.position.x, player.position.y, player.size.x, player.size.y, RED);
     DrawRectangle(boss.position.x, boss.position.y, boss.size.x, boss.size.y, WHITE);
 }
