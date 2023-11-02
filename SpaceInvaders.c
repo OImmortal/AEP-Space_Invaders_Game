@@ -64,8 +64,8 @@ int main() {
     
     //Código da bullet
     bool bulletActive = false;
-    int balaY = player.position.y - 20;
-    int balaX;
+    float bulletPositionY = player.position.y - 20;
+    float bulletPositionX = player.position.x + (player.size.x / 2.2);
     
     //Struct do Boss
     struct EnemyBoss boss;
@@ -73,6 +73,16 @@ int main() {
     boss.size.y = 20;
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
     boss.position.y = 50;
+    //Posição do boss
+    bool andarTras = true;
+    int bossPosition = boss.position.x;
+    //boss ataque
+    bool bossAtack = false;
+    
+    // Código da bala do enemigo
+    bool enemyBullet = false;
+    float enemyBulletPositionY = boss.position.y + 20;
+    float enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
     
     
     
@@ -81,9 +91,6 @@ int main() {
     bool inGame = false;
     bool inMenu = true;
     
-    //Posição do boss
-    bool andar = true;
-    int bossPosition = boss.position.x;
     
     // Loop principal do jogo
     while (!WindowShouldClose()) {
@@ -102,14 +109,38 @@ int main() {
             //Aqui sera executado todo o código fora do menu
             
             //Movimentação do boss
-            if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andar = false;
-            if(bossPosition == 0) andar = true;   
-            if(andar == false) {
-                bossPosition-=3;
-            } else if(andar == true) {
-                bossPosition+=3;
+            if(player.score % 2 == 0) {
+                if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andarTras = false;
+                if(bossPosition == 0) andarTras = true;   
+                if(andarTras == false) {
+                    bossPosition-=3;
+                } else if(andarTras == true) {
+                    bossPosition+=3;
+                }
+                boss.position.x = bossPosition;
+                bossAtack = false;
+            } else {
+                bossAtack = true;
             }
-            boss.position.x = bossPosition;
+            
+            if(bossAtack == false) {
+                enemyBullet = true;
+                enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
+                enemyBulletPositionY = boss.position.y;   
+            }
+            
+            if(enemyBullet == true) {
+                    
+                if(enemyBullet > SCREEN_HEIGHT) {
+                    enemyBullet = false;
+                } else { 
+                    enemyBulletPositionY += 10;
+                }
+                DrawRectangle(enemyBulletPositionX, enemyBulletPositionY, 10 ,10, RED);
+            }
+            
+            
+            //-------------------------------------------------------------------------
             
             //Movimentação do player
             if(IsKeyDown(KEY_RIGHT) && player.position.x < (SCREEN_WIDTH - player.size.x)) {
@@ -119,21 +150,26 @@ int main() {
             if(IsKeyDown(KEY_LEFT) && player.position.x > 0) {
                 player.position.x -= 5;
             } 
-
+            //-------------------------------------------------------------------------
+            
+            //Logica da bala
             if(IsKeyPressed(KEY_SPACE)){
                 bulletActive = true;
+                bulletPositionX = player.position.x + (player.size.x / 2.2);
+                bulletPositionY = player.position.y;
             }
             
             if(bulletActive == true) {
                 
-                if(balaY <= 0) {
+                if(bulletPositionY < 10) {
                     bulletActive = false;
-                    balaY = player.position.y;
+                    player.score += 5;
                 } else { 
-                    balaY -= 10;
+                    bulletPositionY -= 10;
                 }
-                DrawRectangle(player.position.x + (player.size.x / 2.2), balaY, 10 ,10, RED);
+                DrawRectangle(bulletPositionX, bulletPositionY, 10 ,10, RED);
             }
+            //-------------------------------------------------------------------------
             
             
             DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 130, 20, 20, RED);
