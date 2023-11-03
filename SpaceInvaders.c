@@ -90,6 +90,8 @@ int main() {
     /* Usadas para definir quando esta em game e quando está no menu */
     bool inGame = false;
     bool inMenu = true;
+    bool control = false;
+    bool credit = false;
     
     
     // Loop principal do jogo
@@ -103,6 +105,8 @@ int main() {
         if(IsKeyPressed(KEY_TAB)) {
             inMenu = true;
             inGame = false;
+            control = false;
+            credit = false;
         }
         
         if(inMenu == false && inGame == true) {
@@ -193,9 +197,11 @@ int main() {
                         break;
                     case 1:
                         //Controles
+                        control = true;
                         break;
                     case 2:
                         //Créditos
+                        credit = true;
                         break;
                     case 3:
                         //Sair
@@ -203,7 +209,15 @@ int main() {
                         break;
                 }
             }
-            DrawMenu(font, musica);
+            if(control == true){
+                DrawCmd();
+                DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
+            }else if(credit == true){
+                DrawCredits();
+                DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
+            }else{
+                DrawMenu(font, musica);
+            }    
         }
         
         // Para musica do clique
@@ -287,7 +301,9 @@ void DrawCredits() {
     // Exemplo: Desenha os nomes dos desenvolvedores
     DrawText("Créditos", SCREEN_WIDTH / 2 - MeasureText("Créditos", FONT_SIZE) / 2, 80, FONT_SIZE, BLACK);
     DrawText("Desenvolvido por:", SCREEN_WIDTH / 2 - MeasureText("Desenvolvido por:", FONT_SIZE) / 2, 150, FONT_SIZE, BLACK);
-    DrawText("Seu Nome", SCREEN_WIDTH / 2 - MeasureText("Seu Nome", FONT_SIZE) / 2, 200, FONT_SIZE, BLACK);
+    DrawText("João Pedro - R.A:", SCREEN_WIDTH / 2 - MeasureText("João Pedro - R.A:", FONT_SIZE) / 2, 200, FONT_SIZE, BLACK);
+    DrawText("Débora Reis - R.A:", SCREEN_WIDTH / 2 - MeasureText("Débora Reis - R.A:", FONT_SIZE) / 2, 250, FONT_SIZE, BLACK);
+    DrawText("Pedro Alvaro - R.A: 23079477-2", SCREEN_WIDTH / 2 - MeasureText("Pedro Alvaro - R.A: 23079477-2", FONT_SIZE) / 2, 300, FONT_SIZE, BLACK);
 
     // Adicione mais linhas para outros desenvolvedores ou agradecimentos
     
