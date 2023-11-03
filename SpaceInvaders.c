@@ -24,19 +24,23 @@ int selectedOption = 0; // Opção selecionada no menu
 //void DrawMenu(Font font, Music sound);
 //void DrawCredits(Font font);
 
-struct Player{
+typedef struct {
     Vector2 position;
     Vector2 size;
     int score;
     int life;
-};
+}Player;
 
-struct EnemyBoss {
+typedef struct{
     Vector2 position;
     Vector2 size;
     int life;
-};
+}EnemyBoss;
 
+typedef struct {
+    Vector2 position;
+    Rectangle size;
+} Enemy;
 
 int main() {
     srand(time(NULL));
@@ -55,7 +59,7 @@ int main() {
     Music musica1 = LoadMusicStream("SomClique.wav");
     
     // Struct do player
-    struct Player player;
+    Player player;
     player.size.x = PLAYER_SIZE_X;
     player.size.y = PLAYER_SIZE_Y;
     player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
@@ -66,9 +70,10 @@ int main() {
     bool bulletActive = false;
     float bulletPositionY = player.position.y - 20;
     float bulletPositionX = player.position.x + (player.size.x / 2.2);
+    Rectangle bullet;
     
     //Struct do Boss
-    struct EnemyBoss boss;
+    EnemyBoss boss;
     boss.size.x = 80;
     boss.size.y = 20;
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
@@ -79,10 +84,13 @@ int main() {
     //boss ataque
     bool bossAtack = false;
     
-    // Código da bala do enemigo
+    // Código da bala do Boss
     bool enemyBullet = false;
     float enemyBulletPositionY = boss.position.y + 20;
     float enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
+    
+    // Enemy
+    Enemy enemys[30];
     
     
     
@@ -122,7 +130,7 @@ int main() {
             } else {
                 bossAtack = true;
             }
-            
+            //Ataque do boss
             if(bossAtack == false) {
                 enemyBullet = true;
                 enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
@@ -146,10 +154,17 @@ int main() {
             if(IsKeyDown(KEY_RIGHT) && player.position.x < (SCREEN_WIDTH - player.size.x)) {
                 player.position.x += 5;
             }
+            if(IsKeyDown(KEY_D) && player.position.x < (SCREEN_WIDTH - player.size.x)) {
+                player.position.x += 5;
+            }
             
             if(IsKeyDown(KEY_LEFT) && player.position.x > 0) {
                 player.position.x -= 5;
             } 
+            
+            if(IsKeyDown(KEY_A) && player.position.x > 0) {
+                player.position.x -= 5;
+            }
             //-------------------------------------------------------------------------
             
             //Logica da bala
@@ -163,13 +178,49 @@ int main() {
                 
                 if(bulletPositionY < 10) {
                     bulletActive = false;
-                    player.score += 5;
                 } else { 
                     bulletPositionY -= 10;
                 }
-                DrawRectangle(bulletPositionX, bulletPositionY, 10 ,10, RED);
+                bullet = (Rectangle){bulletPositionX, bulletPositionY, 10, 10};
+                DrawRectangleRec(bullet, RED);
+                for(int h = 0;h < 30;h++) {
+                    if(CheckCollisionRecs(enemys[h].size, bullet)) {
+                        player.score += 5;
+                        bulletActive = false;
+                    }
+                }
             }
             //-------------------------------------------------------------------------
+            
+            //Inimigo
+            int y = 120;
+            for(int v = 0;v < 30;v++) { 
+                if(v % 10 == 0) {
+                    enemys[v].position.x = 110;
+                    if(v != 0) {
+                        y += 70;   
+                    }
+                } else {
+                    if(v != 0) {
+                        enemys[v].position.x = enemys[v - 1].position.x + 60;
+                        enemys[v].position.y = y;    
+                    }   
+                }
+                
+                if(v == 0) {
+                    enemys[0].position.y = 120;
+                    enemys[10].position.y = enemys[0].position.y + 70;
+                    enemys[20].position.y = enemys[10].position.y + 70;
+                }
+                
+                enemys[v].size = (Rectangle){enemys[v].position.x, enemys[v].position.y, 30, 30};
+            }
+            
+            for(int j = 0;j< 30;j++) {
+                DrawRectangleRec(enemys[j].size, BLUE);
+                DrawText(TextFormat("%.0f, %.0f, \n %d",enemys[j].position.x, enemys[j].position.y, j), enemys[j].position.x, enemys[j].position.y, 10, WHITE);
+            }
+            
             
             
             DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 130, 20, 20, RED);
@@ -301,7 +352,7 @@ void DrawCmd(Font font){
 } 
 
 //-------------------------
-void DrawGame(struct Player player, struct EnemyBoss boss) {
+void DrawGame(Player player, EnemyBoss boss) {
     //Desenho do jogo
     ClearBackground(BLACK);
     // Desenhar o player
