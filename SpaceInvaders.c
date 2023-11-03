@@ -40,6 +40,7 @@ typedef struct{
 typedef struct {
     Vector2 position;
     Rectangle size;
+    bool active;
 } Enemy;
 
 int main() {
@@ -86,19 +87,25 @@ int main() {
     
     // Código da bala do Boss
     bool enemyBullet = false;
-    float enemyBulletPositionY = boss.position.y + 20;
+    float enemyBulletPositionY = boss.position.y + 2;
     float enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
     
     // Enemy
-    Enemy enemys[30];
-    
-    
+    //Quantidade total de inimigos
+    int enemyTotal = 2;
+    Enemy enemys[enemyTotal];
+    //Ativar todos os inimigos
+    for(int i = 0;i < enemyTotal;i++) {
+        enemys[i].active = true;
+    }
+    int kk = 1;
     
     // Variaveis de jogo
     /* Usadas para definir quando esta em game e quando está no menu */
     bool inGame = false;
     bool inMenu = true;
-    
+    bool control = false;
+    bool credit = false;
     
     // Loop principal do jogo
     while (!WindowShouldClose()) {
@@ -111,40 +118,43 @@ int main() {
         if(IsKeyPressed(KEY_TAB)) {
             inMenu = true;
             inGame = false;
+            control = false;
+            credit = false;
         }
         
         if(inMenu == false && inGame == true) {
             //Aqui sera executado todo o código fora do menu
             
-            //Movimentação do boss
-            if(player.score % 2 == 0) {
-                if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andarTras = false;
-                if(bossPosition == 0) andarTras = true;   
-                if(andarTras == false) {
-                    bossPosition-=3;
-                } else if(andarTras == true) {
-                    bossPosition+=3;
+            
+            if(player.score == (enemyTotal * 5) * kk) {
+                kk++;
+                for(int i = 0;i < enemyTotal;i++) {
+                    if(enemys[i].active != true) {
+                        enemys[i].active = true;
+                    }
                 }
-                boss.position.x = bossPosition;
-                bossAtack = false;
-            } else {
-                bossAtack = true;
-            }
-            //Ataque do boss
-            if(bossAtack == false) {
-                enemyBullet = true;
-                enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
-                enemyBulletPositionY = boss.position.y;   
             }
             
-            if(enemyBullet == true) {
-                    
-                if(enemyBullet > SCREEN_HEIGHT) {
+            //Movimentação do boss
+            if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andarTras = false;
+            if(bossPosition == 0) andarTras = true;   
+            if(andarTras == false) {
+                bossPosition-=3;
+            } else if(andarTras == true) {
+                bossPosition+=3;
+            }
+            boss.position.x = bossPosition;
+            
+            
+            //Logica do tiro do Boss
+            if(enemyBullet > SCREEN_HEIGHT) {
                     enemyBullet = false;
-                } else { 
-                    enemyBulletPositionY += 10;
+                    bossAtack = false;
                 }
-                DrawRectangle(enemyBulletPositionX, enemyBulletPositionY, 10 ,10, RED);
+            
+            if(enemyBullet == true) {
+                enemyBulletPositionY += 15;
+                DrawRectangle(enemyBulletPositionX, enemyBulletPositionY, 20 ,20, RED);
             }
             
             
@@ -183,18 +193,26 @@ int main() {
                 }
                 bullet = (Rectangle){bulletPositionX, bulletPositionY, 10, 10};
                 DrawRectangleRec(bullet, RED);
-                for(int h = 0;h < 30;h++) {
+                for(int h = 0;h < enemyTotal;h++) {
                     if(CheckCollisionRecs(enemys[h].size, bullet)) {
+                        //Aumento no score
                         player.score += 5;
+                        //Morte do inimigo
                         bulletActive = false;
+                        enemys[h].active = false;
+                        //Criação da bala do boss
+                        enemyBullet = true;
+                        enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
+                        enemyBulletPositionY = boss.position.y - 20;  
                     }
                 }
             }
             //-------------------------------------------------------------------------
             
-            //Inimigo
+            //Logica para renderização dos inimigos
             int y = 120;
-            for(int v = 0;v < 30;v++) { 
+            for(int v = 0;v < enemyTotal;v++) { 
+                
                 if(v % 10 == 0) {
                     enemys[v].position.x = 110;
                     if(v != 0) {
@@ -213,21 +231,27 @@ int main() {
                     enemys[20].position.y = enemys[10].position.y + 70;
                 }
                 
-                enemys[v].size = (Rectangle){enemys[v].position.x, enemys[v].position.y, 30, 30};
+                if(enemys[v].active == true) {
+                    enemys[v].size = (Rectangle){enemys[v].position.x, enemys[v].position.y, 40, 40};
+                } else {
+                    enemys[v].size = (Rectangle){1000, 1000, 0, 0};
+                }
             }
             
-            for(int j = 0;j< 30;j++) {
-                DrawRectangleRec(enemys[j].size, BLUE);
-                DrawText(TextFormat("%.0f, %.0f, \n %d",enemys[j].position.x, enemys[j].position.y, j), enemys[j].position.x, enemys[j].position.y, 10, WHITE);
+            for(int j = 0;j< enemyTotal;j++) {
+                if(enemys[j].active == true) {
+                    DrawRectangleRec(enemys[j].size, BLUE);
+                    DrawText(TextFormat("%.0f, %.0f, \n %d",enemys[j].position.x, enemys[j].position.y, j), enemys[j].position.x, enemys[j].position.y, 10, WHITE);
+                }
             }
+            //-------------------------------------------------------------------
             
-            
-            
+            //Desenhar o Score
             DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 130, 20, 20, RED);
             
             
             //Game render
-            DrawGame(player, boss);
+            DrawPlayerAndBoss(player, boss);
         }
         
         if(inMenu == true && inGame == false) {
@@ -244,9 +268,11 @@ int main() {
                         break;
                     case 1:
                         //Controles
+                        control = true;
                         break;
                     case 2:
                         //Créditos
+                        credit = true;
                         break;
                     case 3:
                         //Sair
@@ -254,7 +280,15 @@ int main() {
                         break;
                 }
             }
-            DrawMenu(font, musica);
+            if(control == true){
+                DrawCmd();
+                DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
+            }else if(credit == true){
+                DrawCredits();
+                DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
+            }else{
+                DrawMenu(font, musica);
+            }    
         }
         
         // Para musica do clique
@@ -333,12 +367,13 @@ void DrawMenu() {
 void DrawCredits() {
     // Esta função desenha a tela de créditos
     // Você pode personalizar essa função para exibir os nomes dos desenvolvedores, agradecimentos, etc.
-    
-    
+      
     // Exemplo: Desenha os nomes dos desenvolvedores
     DrawText("Créditos", SCREEN_WIDTH / 2 - MeasureText("Créditos", FONT_SIZE) / 2, 80, FONT_SIZE, BLACK);
     DrawText("Desenvolvido por:", SCREEN_WIDTH / 2 - MeasureText("Desenvolvido por:", FONT_SIZE) / 2, 150, FONT_SIZE, BLACK);
-    DrawText("Seu Nome", SCREEN_WIDTH / 2 - MeasureText("Seu Nome", FONT_SIZE) / 2, 200, FONT_SIZE, BLACK);
+    DrawText("João Pedro - R.A: 23034350-2", SCREEN_WIDTH / 2 - MeasureText("João Pedro - R.A: 23034350-2", FONT_SIZE) / 2, 200, FONT_SIZE, BLACK);
+    DrawText("Débora Reis - R.A:", SCREEN_WIDTH / 2 - MeasureText("Débora Reis - R.A:", FONT_SIZE) / 2, 250, FONT_SIZE, BLACK);
+    DrawText("Pedro Alvaro - R.A: 23079477-2", SCREEN_WIDTH / 2 - MeasureText("Pedro Alvaro - R.A: 23079477-2", FONT_SIZE) / 2, 300, FONT_SIZE, BLACK);
 
     // Adicione mais linhas para outros desenvolvedores ou agradecimentos
     
@@ -352,7 +387,7 @@ void DrawCmd(Font font){
 } 
 
 //-------------------------
-void DrawGame(Player player, EnemyBoss boss) {
+void DrawPlayerAndBoss(Player player, EnemyBoss boss) {
     //Desenho do jogo
     ClearBackground(BLACK);
     // Desenhar o player
