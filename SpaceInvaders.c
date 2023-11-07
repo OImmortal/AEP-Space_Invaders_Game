@@ -12,7 +12,7 @@
 #define MENU_OPTION_CONTROLS "Controles"
 #define MENU_OPTION_CREDITS "Créditos"
 #define MENU_OPTION_EXIT "Sair"
-#define FONT_SIZE 40
+#define FONT_SIZE 30
 
 // Constantes do Player
 #define PLAYER_SIZE_X 100
@@ -27,6 +27,7 @@ int selectedOption = 0; // Opção selecionada no menu
 typedef struct {
     Vector2 position;
     Vector2 size;
+    Rectangle playerRec;
     int score;
     int life;
 }Player;
@@ -43,6 +44,7 @@ typedef struct {
     bool active;
 } Enemy;
 
+    
 int main() {
     srand(time(NULL));
     
@@ -66,6 +68,7 @@ int main() {
     player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
     player.position.y = SCREEN_HEIGHT - (player.size.y * 2);
     player.score = 0;
+    player.life = 4;
     
     //Código da bullet
     bool bulletActive = false;
@@ -89,16 +92,18 @@ int main() {
     bool enemyBullet = false;
     float enemyBulletPositionY = boss.position.y + 2;
     float enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
+    Rectangle enemyBulletRec; // Bala do inimigo
     
     // Enemy
     //Quantidade total de inimigos
-    int enemyTotal = 2;
+    int enemyTotal = 40;
     Enemy enemys[enemyTotal];
     //Ativar todos os inimigos
     for(int i = 0;i < enemyTotal;i++) {
         enemys[i].active = true;
     }
-    int kk = 1;
+    int jogoReiniciado = 1;
+
     
     // Variaveis de jogo
     /* Usadas para definir quando esta em game e quando está no menu */
@@ -106,6 +111,7 @@ int main() {
     bool inMenu = true;
     bool control = false;
     bool credit = false;
+    bool theEnd = false;
     
     // Loop principal do jogo
     while (!WindowShouldClose()) {
@@ -116,24 +122,30 @@ int main() {
         
         //Voltar para o menu
         if(IsKeyPressed(KEY_TAB)) {
-            inMenu = true;
+            inMenu = true; 
             inGame = false;
             control = false;
             credit = false;
+            theEnd = false;
+        }
+        
+        if(theEnd == true) {
+            DrawEnd();
         }
         
         if(inMenu == false && inGame == true) {
             //Aqui sera executado todo o código fora do menu
             
-            
-            if(player.score == (enemyTotal * 5) * kk) {
-                kk++;
-                for(int i = 0;i < enemyTotal;i++) {
-                    if(enemys[i].active != true) {
-                        enemys[i].active = true;
-                    }
-                }
+            // Perder jogo
+            if(player.life <= 0) {
+                theEnd = true;
+                inGame = false;
             }
+            
+            
+            //Reiniciar os inimigos
+            // TODO: ReiniciarInimigos(player, enemys, enemyTotal);
+            
             
             //Movimentação do boss
             if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andarTras = false;
@@ -150,11 +162,12 @@ int main() {
             if(enemyBullet > SCREEN_HEIGHT) {
                     enemyBullet = false;
                     bossAtack = false;
-                }
+            }
             
             if(enemyBullet == true) {
-                enemyBulletPositionY += 15;
-                DrawRectangle(enemyBulletPositionX, enemyBulletPositionY, 20 ,20, RED);
+                enemyBulletPositionY += 25;
+                enemyBulletRec = (Rectangle){enemyBulletPositionX, enemyBulletPositionY, 20, 20}; // Bala do inimigo
+                DrawRectangleRec(enemyBulletRec, RED);
             }
             
             
@@ -162,35 +175,53 @@ int main() {
             
             //Movimentação do player
             if(IsKeyDown(KEY_RIGHT) && player.position.x < (SCREEN_WIDTH - player.size.x)) {
-                player.position.x += 5;
+                player.position.x += 5; // Para direita
             }
             if(IsKeyDown(KEY_D) && player.position.x < (SCREEN_WIDTH - player.size.x)) {
-                player.position.x += 5;
+                player.position.x += 5; // Para direita
             }
             
             if(IsKeyDown(KEY_LEFT) && player.position.x > 0) {
-                player.position.x -= 5;
+                player.position.x -= 5; // Para esquerda
             } 
             
             if(IsKeyDown(KEY_A) && player.position.x > 0) {
-                player.position.x -= 5;
+                player.position.x -= 5; // Para esquerda
             }
+            
+            // Se a vida do player for maior que zero, ele é criado
+            // Caso ao contrario ele é apagado
+            if(player.life > 0) {
+                player.playerRec = (Rectangle){player.position.x, player.position.y, player.size.x, player.size.y};
+            } else {
+                player.playerRec = (Rectangle){0};
+            }
+            
+            // Verifica se a bala do inimigo está colidindo com o player
+            if(CheckCollisionRecs(player.playerRec, enemyBulletRec) == true) {
+                player.life -= 1;
+            } 
+            
+            
             //-------------------------------------------------------------------------
             
-            //Logica da bala
-            if(IsKeyPressed(KEY_SPACE)){
+            //Logica da bala do player
+            // Criação do objeto bala do player
+            if(IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_C)){
                 bulletActive = true;
                 bulletPositionX = player.position.x + (player.size.x / 2.2);
                 bulletPositionY = player.position.y;
             }
             
+            // Tiro iniciado
             if(bulletActive == true) {
                 
                 if(bulletPositionY < 10) {
-                    bulletActive = false;
+                    bulletActive = false; // Desativa a bala do player ao atravessar o mapa
                 } else { 
-                    bulletPositionY -= 10;
+                    bulletPositionY -= 10; // Volta a bala na estaca 0
                 }
+                
                 bullet = (Rectangle){bulletPositionX, bulletPositionY, 10, 10};
                 DrawRectangleRec(bullet, RED);
                 for(int h = 0;h < enemyTotal;h++) {
@@ -213,6 +244,7 @@ int main() {
             int y = 120;
             for(int v = 0;v < enemyTotal;v++) { 
                 
+                // Posiciona os inimigos em seus lugares
                 if(v % 10 == 0) {
                     enemys[v].position.x = 110;
                     if(v != 0) {
@@ -225,16 +257,20 @@ int main() {
                     }   
                 }
                 
-                if(v == 0) {
-                    enemys[0].position.y = 120;
-                    enemys[10].position.y = enemys[0].position.y + 70;
-                    enemys[20].position.y = enemys[10].position.y + 70;
+                // Um bug acontecia com os valores que terminavam com zeros, ess código foi usado
+                // para resolve-lo
+                if(v % 10 == 0) {
+                    if(v == 0) {
+                        enemys[0].position.y = 120;
+                    } else {
+                        enemys[v].position.y = enemys[v - 1].position.y + 70;
+                    }
                 }
-                
+                // Criar rectangle do inimigo
                 if(enemys[v].active == true) {
                     enemys[v].size = (Rectangle){enemys[v].position.x, enemys[v].position.y, 40, 40};
                 } else {
-                    enemys[v].size = (Rectangle){1000, 1000, 0, 0};
+                    enemys[v].size = (Rectangle){0};
                 }
             }
             
@@ -248,10 +284,10 @@ int main() {
             
             //Desenhar o Score
             DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 130, 20, 20, RED);
-            
+            DrawText(TextFormat("Life: %d", player.life), 30, 20, 20, WHITE);
             
             //Game render
-            DrawPlayerAndBoss(player, boss);
+            DrawPlayerAndBoss(player, boss, enemyBulletRec);
         }
         
         if(inMenu == true && inGame == false) {
@@ -265,6 +301,8 @@ int main() {
                         //Jogar
                         inMenu = false;
                         inGame = true;
+                        theEnd = false;
+                        player.life = 4;
                         break;
                     case 1:
                         //Controles
@@ -344,6 +382,20 @@ void UpDownMenuLogic() {
 
 }
 
+/*
+TODO: 
+void ReiniciarInimigos(Player player, Enemy enemys, int enemyTotal) {
+    int jogoReiniciado = 1;
+    if(player.score == (enemyTotal * 5) * jogoReiniciado) {
+        jogoReiniciado++;
+        for(int i = 0;i < enemyTotal;i++) {
+            if(*enemys[i].active != true) {
+                *enemys[i].active = true;
+            }
+        }
+    }
+}
+*/
 //-------DrawMenu
 void DrawMenu() {
     
@@ -354,10 +406,10 @@ void DrawMenu() {
     for (int i = 0; i < 4; i++) {
         if (i == selectedOption) {
             DrawText(TextFormat(" %s ", (i == 0) ? MENU_OPTION_PLAY : (i == 1) ? MENU_OPTION_CONTROLS : (i == 2) ? MENU_OPTION_CREDITS : MENU_OPTION_EXIT),
-                     SCREEN_WIDTH - SCREEN_WIDTH, 200 + i * 80, FONT_SIZE, MAROON);
+                     SCREEN_WIDTH - SCREEN_WIDTH, 200 + i * 80, FONT_SIZE + 10, MAROON);
         } else {
             DrawText(TextFormat(" %s ", (i == 0) ? MENU_OPTION_PLAY : (i == 1) ? MENU_OPTION_CONTROLS : (i == 2) ? MENU_OPTION_CREDITS : MENU_OPTION_EXIT),
-                     SCREEN_WIDTH - SCREEN_WIDTH, 200 + i * 80, FONT_SIZE, (i == selectedOption) ? MAROON : BLACK);
+                     SCREEN_WIDTH - SCREEN_WIDTH, 200 + i * 80, FONT_SIZE + 10, (i == selectedOption) ? MAROON : BLACK);
         }
     }
     
@@ -382,15 +434,24 @@ void DrawCredits() {
 void DrawCmd(Font font){
     // Desenho de texto informando os controlers
     DrawText("Controles:", 10, 10, 20, BLACK);
-    DrawText("- Setas do Teclado para mover", 10, 40, 20, BLACK);
-    DrawText("- Barra de Espaço para ação", 10, 70, 20, BLACK);
+    DrawText("- D ou -> para direita", 10, 40, 20, BLACK);
+    DrawText("- A ou <- para esquerda", 10, 70, 20, BLACK);
+    DrawText("- Barra de Espaço para ação", 10, 100, 20, BLACK);
 } 
-
 //-------------------------
-void DrawPlayerAndBoss(Player player, EnemyBoss boss) {
+//-------DrawEnd
+void DrawEnd() {
+    DrawText("Você Perdeu", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 30, BLACK);
+    DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
+}
+void DrawPlayerAndBoss(Player player, EnemyBoss boss, Rectangle enemyBulletRec) {
     //Desenho do jogo
     ClearBackground(BLACK);
     // Desenhar o player
-    DrawRectangle(player.position.x, player.position.y, player.size.x, player.size.y, RED);
+    if(CheckCollisionRecs(player.playerRec, enemyBulletRec) == true) {
+        DrawRectangleRec(player.playerRec, RED);
+    } else {
+        DrawRectangleRec(player.playerRec, GREEN);
+    }
     DrawRectangle(boss.position.x, boss.position.y, boss.size.x, boss.size.y, WHITE);
 }
