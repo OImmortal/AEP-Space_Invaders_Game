@@ -35,6 +35,8 @@ typedef struct {
 typedef struct{
     Vector2 position;
     Vector2 size;
+    Rectangle bossRec;
+    int speed;
     int life;
 }EnemyBoss;
 
@@ -82,11 +84,15 @@ int main() {
     boss.size.y = 20;
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
     boss.position.y = 50;
+    boss.speed = 3;
+    boss.life = 3;
     //Posição do boss
     bool andarTras = true;
     int bossPosition = boss.position.x;
     //boss ataque
     bool bossAtack = false;
+    bool finalBattle = false;
+    
     
     // Código da bala do Boss
     bool enemyBullet = false;
@@ -96,7 +102,7 @@ int main() {
     
     // Enemy
     //Quantidade total de inimigos
-    int enemyTotal = 40;
+    int enemyTotal = 2;
     Enemy enemys[enemyTotal];
     //Ativar todos os inimigos
     for(int i = 0;i < enemyTotal;i++) {
@@ -142,24 +148,36 @@ int main() {
                 inGame = false;
             }
             
+            if(player.score == (enemyTotal * 5) * jogoReiniciado) {
+                jogoReiniciado++;
+                boss.life = 5;
+                boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
+                boss.speed += 5;
+            }
+            
             
             //Reiniciar os inimigos
             // TODO: ReiniciarInimigos(player, enemys, enemyTotal);
             
+            if(boss.life >= 1) {
+                boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
+            } else {
+                boss.bossRec = (Rectangle){0};
+            }
             
             //Movimentação do boss
             if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andarTras = false;
             if(bossPosition == 0) andarTras = true;   
             if(andarTras == false) {
-                bossPosition-=3;
+                bossPosition-=boss.speed;
             } else if(andarTras == true) {
-                bossPosition+=3;
+                bossPosition+=boss.speed;
             }
             boss.position.x = bossPosition;
             
             
             //Logica do tiro do Boss
-            if(enemyBullet > SCREEN_HEIGHT) {
+            if(enemyBulletPositionY > SCREEN_HEIGHT) {
                     enemyBullet = false;
                     bossAtack = false;
             }
@@ -239,7 +257,29 @@ int main() {
                 }
             }
             //-------------------------------------------------------------------------
-            
+                
+                // Briga final
+                int quantidadeDeMortos = 0;
+                for(int x = 0;x < enemyTotal;x++) {
+                    if(enemys[x].active == false) {
+                        quantidadeDeMortos++;
+                    }
+                }
+                
+                if(quantidadeDeMortos == enemyTotal) {
+                    finalBattle = true;
+                }
+                
+                if(finalBattle == true) {
+                    if(CheckCollisionRecs(bullet, boss.bossRec)) {
+                        boss.life -= 10;
+                    }
+                }
+                
+                DrawText(TextFormat("Mortes: %d", quantidadeDeMortos), 15, SCREEN_HEIGHT - 20, 10, WHITE);
+                
+            //-------------------------------------------------------------------------
+           
             //Logica para renderização dos inimigos
             int y = 120;
             for(int v = 0;v < enemyTotal;v++) { 
@@ -446,12 +486,12 @@ void DrawEnd() {
 }
 void DrawPlayerAndBoss(Player player, EnemyBoss boss, Rectangle enemyBulletRec) {
     //Desenho do jogo
-    ClearBackground(BLACK);
+    ClearBackground(DARKGRAY);
     // Desenhar o player
     if(CheckCollisionRecs(player.playerRec, enemyBulletRec) == true) {
         DrawRectangleRec(player.playerRec, RED);
     } else {
         DrawRectangleRec(player.playerRec, GREEN);
     }
-    DrawRectangle(boss.position.x, boss.position.y, boss.size.x, boss.size.y, WHITE);
+    DrawRectangleRec(boss.bossRec, WHITE);
 }
