@@ -46,6 +46,9 @@ typedef struct {
     bool active;
 } Enemy;
 
+
+
+
     
 int main() {
     srand(time(NULL));
@@ -102,7 +105,7 @@ int main() {
     
     // Enemy
     //Quantidade total de inimigos
-    int enemyTotal = 2;
+    int enemyTotal = 10;
     Enemy enemys[enemyTotal];
     //Ativar todos os inimigos
     for(int i = 0;i < enemyTotal;i++) {
@@ -119,6 +122,12 @@ int main() {
     bool credit = false;
     bool theEnd = false;
     
+    Enemy enemyInitialPositions[enemyTotal];
+    
+    for (int i = 0; i < enemyTotal; i++) {
+        enemyInitialPositions[i].position = enemys[i].position;
+    }
+    
     // Loop principal do jogo
     while (!WindowShouldClose()) {
         BeginDrawing();
@@ -133,6 +142,8 @@ int main() {
             control = false;
             credit = false;
             theEnd = false;
+            player.score = 0;
+            ReiniciarInimigos(enemys, enemyInitialPositions, enemyTotal);
         }
         
         if(theEnd == true) {
@@ -156,8 +167,7 @@ int main() {
             }
             
             
-            //Reiniciar os inimigos
-            // TODO: ReiniciarInimigos(player, enemys, enemyTotal);
+      
             
             if(boss.life >= 1) {
                 boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
@@ -422,20 +432,13 @@ void UpDownMenuLogic() {
 
 }
 
-/*
-TODO: 
-void ReiniciarInimigos(Player player, Enemy enemys, int enemyTotal) {
-    int jogoReiniciado = 1;
-    if(player.score == (enemyTotal * 5) * jogoReiniciado) {
-        jogoReiniciado++;
-        for(int i = 0;i < enemyTotal;i++) {
-            if(*enemys[i].active != true) {
-                *enemys[i].active = true;
-            }
-        }
+void ReiniciarInimigos(Enemy enemys[], const Enemy initialPositions[], int enemyTotal) {
+    for (int i = 0; i < enemyTotal; i++) {
+        enemys[i].active = true;
+        enemys[i].position = initialPositions[i].position;
     }
 }
-*/
+
 //-------DrawMenu
 void DrawMenu() {
     
