@@ -47,8 +47,6 @@ typedef struct {
 } Enemy;
 
 
-
-
     
 int main() {
     srand(time(NULL));
@@ -73,13 +71,13 @@ int main() {
     player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
     player.position.y = SCREEN_HEIGHT - (player.size.y * 2);
     player.score = 0;
-    player.life = 4;
     
     //Código da bullet
     bool bulletActive = false;
     float bulletPositionY = player.position.y - 20;
     float bulletPositionX = player.position.x + (player.size.x / 2.2);
     Rectangle bullet;
+    int bulletPlayerSpeed = 10;
     
     //Struct do Boss
     EnemyBoss boss;
@@ -88,7 +86,7 @@ int main() {
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
     boss.position.y = 50;
     boss.speed = 3;
-    boss.life = 3;
+    boss.life = 6;
     //Posição do boss
     bool andarTras = true;
     int bossPosition = boss.position.x;
@@ -96,6 +94,7 @@ int main() {
     bool bossAtack = false;
     bool finalBattle = false;
     
+
     
     // Código da bala do Boss
     bool enemyBullet = false;
@@ -105,7 +104,7 @@ int main() {
     
     // Enemy
     //Quantidade total de inimigos
-    int enemyTotal = 10;
+    int enemyTotal = 40;
     Enemy enemys[enemyTotal];
     //Ativar todos os inimigos
     for(int i = 0;i < enemyTotal;i++) {
@@ -123,9 +122,33 @@ int main() {
     bool theEnd = false;
     
     Enemy enemyInitialPositions[enemyTotal];
-    
     for (int i = 0; i < enemyTotal; i++) {
         enemyInitialPositions[i].position = enemys[i].position;
+    }
+    
+    void voltarAoMenu() {
+        if(IsKeyPressed(KEY_TAB)) {
+            inMenu = true; 
+            inGame = false;
+            control = false;
+            credit = false;
+            theEnd = false;
+            player.score = 0;
+            ReiniciarInimigos(enemys, enemyInitialPositions, enemyTotal);
+            //boss
+            boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
+            boss.position.y = 50;
+            boss.life = 6;
+            boss.speed = 3;
+            //Bala do inimigo
+            bossAtack = false;
+            enemyBullet = false;
+            //player
+            player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
+            player.position.y = SCREEN_HEIGHT - (player.size.y * 2);
+            //Bala do player
+            bulletActive = false;  
+        }
     }
     
     // Loop principal do jogo
@@ -136,15 +159,8 @@ int main() {
         PlayMusicStream(musica);
         
         //Voltar para o menu
-        if(IsKeyPressed(KEY_TAB)) {
-            inMenu = true; 
-            inGame = false;
-            control = false;
-            credit = false;
-            theEnd = false;
-            player.score = 0;
-            ReiniciarInimigos(enemys, enemyInitialPositions, enemyTotal);
-        }
+        
+        voltarAoMenu();
         
         if(theEnd == true) {
             DrawEnd();
@@ -159,16 +175,8 @@ int main() {
                 inGame = false;
             }
             
-            if(player.score == (enemyTotal * 5) * jogoReiniciado) {
-                jogoReiniciado++;
-                boss.life = 5;
-                boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
-                boss.speed += 5;
-            }
             
-            
-      
-            
+           
             if(boss.life >= 1) {
                 boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
             } else {
@@ -176,8 +184,8 @@ int main() {
             }
             
             //Movimentação do boss
-            if(bossPosition == SCREEN_WIDTH - (boss.size.x)) andarTras = false;
-            if(bossPosition == 0) andarTras = true;   
+            if(bossPosition >= SCREEN_WIDTH - (boss.size.x)) andarTras = false;
+            if(bossPosition <= 0) andarTras = true;   
             if(andarTras == false) {
                 bossPosition-=boss.speed;
             } else if(andarTras == true) {
@@ -247,7 +255,7 @@ int main() {
                 if(bulletPositionY < 10) {
                     bulletActive = false; // Desativa a bala do player ao atravessar o mapa
                 } else { 
-                    bulletPositionY -= 10; // Volta a bala na estaca 0
+                    bulletPositionY -= bulletPlayerSpeed; // Volta a bala na estaca 0
                 }
                 
                 bullet = (Rectangle){bulletPositionX, bulletPositionY, 10, 10};
@@ -282,11 +290,16 @@ int main() {
                 
                 if(finalBattle == true) {
                     if(CheckCollisionRecs(bullet, boss.bossRec)) {
-                        boss.life -= 10;
+                        boss.life -= 1;
+                        boss.speed+=2;
+                        finalBattle = false;
+                        ReiniciarInimigos(enemys, enemyInitialPositions, enemyTotal);
+                        bulletPlayerSpeed+=2;
                     }
                 }
                 
                 DrawText(TextFormat("Mortes: %d", quantidadeDeMortos), 15, SCREEN_HEIGHT - 20, 10, WHITE);
+                DrawText(TextFormat("Vida do boss: %d", boss.life), 15, SCREEN_HEIGHT - 30, 10, WHITE);
                 
             //-------------------------------------------------------------------------
            
@@ -484,7 +497,7 @@ void DrawCmd(Font font){
 //-------------------------
 //-------DrawEnd
 void DrawEnd() {
-    DrawText("Você Perdeu", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 30, BLACK);
+    DrawText("Que pena, você perdeu", SCREEN_WIDTH / 2, 20, 30, BLACK);
     DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
 }
 void DrawPlayerAndBoss(Player player, EnemyBoss boss, Rectangle enemyBulletRec) {
