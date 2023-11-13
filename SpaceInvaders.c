@@ -79,6 +79,8 @@ int main() {
     Rectangle bullet;
     int bulletPlayerSpeed = 10;
     
+    int lastScore = 0;
+    
     //Struct do Boss
     EnemyBoss boss;
     boss.size.x = 80;
@@ -120,6 +122,7 @@ int main() {
     bool control = false;
     bool credit = false;
     bool theEnd = false;
+    bool theWin = false;
     
     Enemy enemyInitialPositions[enemyTotal];
     for (int i = 0; i < enemyTotal; i++) {
@@ -133,6 +136,7 @@ int main() {
             control = false;
             credit = false;
             theEnd = false;
+            theWin = false;
             player.score = 0;
             ReiniciarInimigos(enemys, enemyInitialPositions, enemyTotal);
             //boss
@@ -163,7 +167,15 @@ int main() {
         voltarAoMenu();
         
         if(theEnd == true) {
-            DrawEnd();
+            DrawEnd(player.score);
+            
+        }else if(theWin == true){
+            DrawWin(player.score);
+            
+        }
+        
+        if(player.score > lastScore){
+            lastScore = player.score;
         }
         
         if(inMenu == false && inGame == true) {
@@ -347,6 +359,7 @@ int main() {
             
             //Desenhar o Score
             DrawText(TextFormat("Score: %d", player.score), SCREEN_WIDTH - 130, 20, 20, RED);
+            DrawText(TextFormat("Recorde Score: %d", lastScore), SCREEN_WIDTH - 350, 20, 20, BLUE);
             DrawText(TextFormat("Life: %d", player.life), 30, 20, 20, WHITE);
             
             //Game render
@@ -356,6 +369,9 @@ int main() {
         if(inMenu == true && inGame == false) {
             
             UpDownMenuLogic();
+            
+            DrawText(TextFormat("Recorde Score: %d", lastScore), SCREEN_WIDTH - 350, SCREEN_HEIGHT - 40, FONT_SIZE, BLACK);
+            
             // Selecionar opção do menu
             if(IsKeyPressed(KEY_ENTER)) {
                 PlayMusicStream(musica1);
@@ -456,7 +472,7 @@ void ReiniciarInimigos(Enemy enemys[], const Enemy initialPositions[], int enemy
 void DrawMenu() {
     
     // Desenhe o título
-    DrawText(MENU_TITLE, SCREEN_WIDTH / 2 - MeasureText(MENU_TITLE, FONT_SIZE) / 2, 80, FONT_SIZE, BLACK);
+    DrawText(MENU_TITLE, SCREEN_WIDTH / 2 - MeasureText(MENU_TITLE, FONT_SIZE) / 2, 100, FONT_SIZE, BLACK);
 
     // Desenhe as opções do menu
     for (int i = 0; i < 4; i++) {
@@ -496,8 +512,19 @@ void DrawCmd(Font font){
 } 
 //-------------------------
 //-------DrawEnd
-void DrawEnd() {
-    DrawText("Que pena, você perdeu", SCREEN_WIDTH / 2, 20, 30, BLACK);
+void DrawEnd(int score) {
+    char scoreText[20];
+    DrawText("Que pena, você Perdeu!", SCREEN_WIDTH / 2 - MeasureText("Que pena, você perdeu!", FONT_SIZE) / 2, 190, 30, BLACK);
+    sprintf(scoreText, "SCORE : %i", score);
+    DrawText(scoreText, SCREEN_WIDTH / 2 - MeasureText(scoreText, FONT_SIZE) / 2, 250, 30, BLACK);
+    DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
+}
+//-------DrawWin
+void DrawWin(int score) {
+    char scoreText[20];
+    DrawText("Parabéns, Você Venceu!", SCREEN_WIDTH / 2 - MeasureText("Parabéns, Você Venceu!!", FONT_SIZE) / 2, 190, 30, BLACK);
+    sprintf(scoreText, "SCORE: %i", score);
+    DrawText(scoreText, SCREEN_WIDTH / 2 - MeasureText(scoreText, FONT_SIZE) / 2, 250, 30, BLACK);
     DrawText("Pressione TAB para Voltar", SCREEN_WIDTH / 2 - MeasureText("Pressione TAB para Voltar", FONT_SIZE) / 2, 500, FONT_SIZE, BLACK);
 }
 void DrawPlayerAndBoss(Player player, EnemyBoss boss, Rectangle enemyBulletRec) {
