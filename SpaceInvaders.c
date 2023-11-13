@@ -29,6 +29,7 @@ typedef struct {
     Vector2 size;
     Rectangle playerRec;
     int score;
+    int speed;
     int life;
 }Player;
 
@@ -71,6 +72,7 @@ int main() {
     player.position.x = (SCREEN_WIDTH - player.size.x) / 2;
     player.position.y = SCREEN_HEIGHT - (player.size.y * 2);
     player.score = 0;
+    player.speed = 5;
     
     //Código da bullet
     bool bulletActive = false;
@@ -88,7 +90,7 @@ int main() {
     boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
     boss.position.y = 50;
     boss.speed = 3;
-    boss.life = 6;
+    boss.life = 4;
     //Posição do boss
     bool andarTras = true;
     int bossPosition = boss.position.x;
@@ -129,6 +131,12 @@ int main() {
         enemyInitialPositions[i].position = enemys[i].position;
     }
     
+    //PowerUp
+    int powerUp = rand() % 100;
+    bool takePowerUp = false;
+    Rectangle powerUpRec;
+    
+    // Reiniciar Jogo / Voltar ao menu
     void voltarAoMenu() {
         if(IsKeyPressed(KEY_TAB)) {
             inMenu = true; 
@@ -166,12 +174,42 @@ int main() {
         
         voltarAoMenu();
         
+        // Manter valores
+        if(player.speed < 5) {
+            player.speed = 5;
+        }
+        
+        if(bulletPlayerSpeed < 10) {
+            bulletPlayerSpeed = 10;
+        }
+        
+        // PowerUp logica
+        if(powerUp == 1) {
+            powerUpRec = (Rectangle){SCREEN_WIDTH - 110, player.position.y, 20, 20};
+            DrawRectangleRec(powerUpRec, RED);
+            takePowerUp = true;
+        }
+        
+        if(powerUp == 2) {
+            powerUpRec = (Rectangle){SCREEN_WIDTH - 110, player.position.y, 20, 20};
+            DrawRectangleRec(powerUpRec, BLUE);
+            takePowerUp = true;
+        }
+        
         if(theEnd == true) {
             DrawEnd(player.score);
+            takePowerUp = false;
+            powerUpRec = (Rectangle){0};
+            powerUp = 0;
             
         }else if(theWin == true){
             DrawWin(player.score);
+            takePowerUp = false;
+            powerUpRec = (Rectangle){0};
+            powerUp = 0;
             
+        }else if(theWin == true){
+            DrawWin(player.score);
         }
         
         if(player.score > lastScore){
@@ -187,8 +225,6 @@ int main() {
                 inGame = false;
             }
             
-            
-           
             if(boss.life >= 1) {
                 boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
             } else {
@@ -237,6 +273,23 @@ int main() {
                 player.position.x -= 5; // Para esquerda
             }
             
+            if(CheckCollisionRecs(player.playerRec, powerUpRec) && powerUp == 1) {
+                takePowerUp = false;
+                powerUp = 0;
+                if(player.life <= 3) {
+                    player.life = player.life + 1;
+                }
+            }
+            
+            if(CheckCollisionRecs(player.playerRec, powerUpRec) && powerUp == 2) {
+                takePowerUp = false;
+                powerUp = 0;
+                if(player.speed < 7 && bulletPlayerSpeed < 20) {
+                    bulletPlayerSpeed += 15;
+                    player.speed += 5;
+                }
+            } 
+            
             // Se a vida do player for maior que zero, ele é criado
             // Caso ao contrario ele é apagado
             if(player.life > 0) {
@@ -282,7 +335,22 @@ int main() {
                         //Criação da bala do boss
                         enemyBullet = true;
                         enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
-                        enemyBulletPositionY = boss.position.y - 20;  
+                        enemyBulletPositionY = boss.position.y - 20; 
+                        if(takePowerUp == false) {
+                            if(player.life == 1) {
+                                powerUp = rand() % 6;
+                            } else { 
+                                powerUp = rand() % 25;
+                            }
+                        }
+                        
+                        if(player.speed > 5) {
+                            player.speed-=2;
+                        }
+                        
+                        if(bulletPlayerSpeed > 10) {
+                            bulletPlayerSpeed-=5;
+                        }
                     }
                 }
             }
@@ -310,8 +378,12 @@ int main() {
                     }
                 }
                 
-                DrawText(TextFormat("Mortes: %d", quantidadeDeMortos), 15, SCREEN_HEIGHT - 20, 10, WHITE);
+                DrawText(TextFormat("Player Speed: %d", player.speed), 100, SCREEN_HEIGHT - 30, 10, WHITE);
                 DrawText(TextFormat("Vida do boss: %d", boss.life), 15, SCREEN_HEIGHT - 30, 10, WHITE);
+                
+                DrawText(TextFormat("Bullet Speed: %d", bulletPlayerSpeed), 140, SCREEN_HEIGHT - 20, 10, WHITE);
+                DrawText(TextFormat("Power Up: %d", powerUp), 70, SCREEN_HEIGHT - 20, 10, WHITE);
+                DrawText(TextFormat("Mortes: %d", quantidadeDeMortos), 15, SCREEN_HEIGHT - 20, 10, WHITE);
                 
             //-------------------------------------------------------------------------
            
@@ -352,7 +424,6 @@ int main() {
             for(int j = 0;j< enemyTotal;j++) {
                 if(enemys[j].active == true) {
                     DrawRectangleRec(enemys[j].size, BLUE);
-                    DrawText(TextFormat("%.0f, %.0f, \n %d",enemys[j].position.x, enemys[j].position.y, j), enemys[j].position.x, enemys[j].position.y, 10, WHITE);
                 }
             }
             //-------------------------------------------------------------------
