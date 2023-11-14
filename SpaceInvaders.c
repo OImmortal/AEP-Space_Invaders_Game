@@ -64,6 +64,9 @@ int main() {
     InitAudioDevice();
     Music musica = LoadMusicStream("SomGame.wav");
     Music musica1 = LoadMusicStream("SomClique.wav");
+    Sound powerUpSound = LoadSound("powerUp.wav");
+    Sound hitEnemy = LoadSound("hitHurt.wav");
+    Sound BossDie = LoadSound("explosion.wav");
     
     // Struct do player
     Player player;
@@ -150,7 +153,7 @@ int main() {
             //boss
             boss.position.x = (SCREEN_WIDTH - boss.size.x) / 2;
             boss.position.y = 50;
-            boss.life = 6;
+            boss.life = 4;
             boss.speed = 3;
             //Bala do inimigo
             bossAtack = false;
@@ -206,10 +209,7 @@ int main() {
             DrawWin(player.score);
             takePowerUp = false;
             powerUpRec = (Rectangle){0};
-            powerUp = 0;
-            
-        }else if(theWin == true){
-            DrawWin(player.score);
+            powerUp = 0;   
         }
         
         if(player.score > lastScore){
@@ -228,7 +228,12 @@ int main() {
             if(boss.life >= 1) {
                 boss.bossRec = (Rectangle){boss.position.x, boss.position.y, boss.size.x, boss.size.y};
             } else {
-                boss.bossRec = (Rectangle){0};
+                if(boss.life <= 0) {
+                    PlaySound(BossDie);
+                    boss.bossRec = (Rectangle){0};
+                    theWin = true;
+                    inGame = false;
+                }
             }
             
             //Movimentação do boss
@@ -279,6 +284,7 @@ int main() {
                 if(player.life <= 3) {
                     player.life = player.life + 1;
                 }
+                PlaySound(powerUpSound);
             }
             
             if(CheckCollisionRecs(player.playerRec, powerUpRec) && powerUp == 2) {
@@ -288,6 +294,7 @@ int main() {
                     bulletPlayerSpeed += 15;
                     player.speed += 5;
                 }
+                PlaySound(powerUpSound);
             } 
             
             // Se a vida do player for maior que zero, ele é criado
@@ -301,6 +308,7 @@ int main() {
             // Verifica se a bala do inimigo está colidindo com o player
             if(CheckCollisionRecs(player.playerRec, enemyBulletRec) == true) {
                 player.life -= 1;
+                PlaySound(hitEnemy);
             } 
             
             
@@ -335,7 +343,8 @@ int main() {
                         //Criação da bala do boss
                         enemyBullet = true;
                         enemyBulletPositionX = boss.position.x + (boss.size.x / 2.2);
-                        enemyBulletPositionY = boss.position.y - 20; 
+                        enemyBulletPositionY = boss.position.y - 20;
+                        PlaySound(hitEnemy);
                         if(takePowerUp == false) {
                             if(player.life == 1) {
                                 powerUp = rand() % 6;
@@ -375,6 +384,7 @@ int main() {
                         finalBattle = false;
                         ReiniciarInimigos(enemys, enemyInitialPositions, enemyTotal);
                         bulletPlayerSpeed+=2;
+                        PlaySound(hitEnemy);
                     }
                 }
                 
