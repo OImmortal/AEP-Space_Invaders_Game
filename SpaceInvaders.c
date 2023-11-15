@@ -189,12 +189,14 @@ int main() {
         // PowerUp logica
         if(powerUp == 1) {
             powerUpRec = (Rectangle){SCREEN_WIDTH - 110, player.position.y, 20, 20};
+            DrawText(("Vida Extra!"), SCREEN_WIDTH - 155, SCREEN_HEIGHT - 70, 20, GREEN);
             DrawRectangleRec(powerUpRec, RED);
             takePowerUp = true;
         }
         
         if(powerUp == 2) {
             powerUpRec = (Rectangle){SCREEN_WIDTH - 110, player.position.y, 20, 20};
+            DrawText(("Bônus Velocidade!"), SCREEN_WIDTH - 195, SCREEN_HEIGHT - 70, 20, GREEN);
             DrawRectangleRec(powerUpRec, BLUE);
             takePowerUp = true;
         }
