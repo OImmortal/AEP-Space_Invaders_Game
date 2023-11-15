@@ -579,7 +579,7 @@ void DrawCredits() {
     DrawText("Créditos", SCREEN_WIDTH / 2 - MeasureText("Créditos", FONT_SIZE) / 2, 80, FONT_SIZE, BLACK);
     DrawText("Desenvolvido por:", SCREEN_WIDTH / 2 - MeasureText("Desenvolvido por:", FONT_SIZE) / 2, 150, FONT_SIZE, BLACK);
     DrawText("João Pedro - R.A: 23034350-2", SCREEN_WIDTH / 2 - MeasureText("João Pedro - R.A: 23034350-2", FONT_SIZE) / 2, 200, FONT_SIZE, BLACK);
-    DrawText("Débora Reis - R.A:", SCREEN_WIDTH / 2 - MeasureText("Débora Reis - R.A:", FONT_SIZE) / 2, 250, FONT_SIZE, BLACK);
+    DrawText("Débora Reis - R.A: 22247855-2 ", SCREEN_WIDTH / 2 - MeasureText("Débora Reis - R.A: 22247855-2 ", FONT_SIZE) / 2, 250, FONT_SIZE, BLACK);
     DrawText("Pedro Alvaro - R.A: 23079477-2", SCREEN_WIDTH / 2 - MeasureText("Pedro Alvaro - R.A: 23079477-2", FONT_SIZE) / 2, 300, FONT_SIZE, BLACK);
 
     // Adicione mais linhas para outros desenvolvedores ou agradecimentos
